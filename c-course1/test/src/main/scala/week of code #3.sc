@@ -1,95 +1,4 @@
-/*
-//game of 1s and 0s
-//list possible moves from current position: removing one element that is surrounded by 0s
-def possibleMoves(list: List[Int]): List[List[Int]] = {
-  def checkIfValid(triple: List[Int]): Boolean = triple.head == 0 && triple.last == 0
-
-  val innerChecked = list.sliding(3).map(checkIfValid(_)).toList
-  val indexedChecks = innerChecked.zipWithIndex.filter(_._1)
-  //  val indexedChecks = innerChecked.zipWithIndex.map((pair: (Boolean, Int)) => (pair._1, pair._2 + 1)).filter(_._1)
-
-  indexedChecks.map((pair: (Boolean, Int)) => list.patch(pair._2, Nil, 1)).distinct
-  //  indexedChecks.map((pair: (Boolean, Int)) => list.take(pair._2) ::: list.drop(pair._2 + 1))
-  //  indexedChecks.map((pair: (Boolean, Int)) => list.take(pair._2) ++ list.drop(pair._2 + 1))
-}
-val list = List(1, 0, 0, 1, 0, 0, 0)
-possibleMoves(list)
-possibleMoves(List(1))
-possibleMoves(List(0, 0, 0, 0, 1, 0))
-
-
-//returns true if player will win from this position with perfect game of both.
-def isWinningPosition(list: List[Int]): Boolean = possibleMoves(list) match {
-  //no possible moves
-  case List() => false
-  // exists at least one move that is loosing for the next player
-  case moves if !moves.forall(isWinningPosition(_)) => true
-  // all moves for other player are winning, we loose whatever we choose now
-  case _ => false
-}
-assert(!isWinningPosition(List(1, 0, 0, 1)))
-assert(isWinningPosition(List(1, 0, 1, 0, 1)))
-
-//assert(!isWinningPosition(List(0, 0, 0, 0, 0, 0)))
-
-
-//now, we just get if the initial list is winning.
-//But I also need caching! So I would recalculate too much same evaluations.
-/*case class Memo[A,B](f: A => B) extends (A => B) {
-  private val cache = mutable.Map.empty[A, B]
-  def apply(x: A) = cache getOrElseUpdate (x, f(x))
-}
-
-val fib: Memo[Int, BigInt] = Memo {
-  case 0 => 0
-  case 1 => 1
-  case n => fib(n-1) + fib(n-2)
-}*/
-object CachingSolution {
-  var mutableMap = Map[List[Int], Boolean]()
-
-  def isWinningPosition(list: List[Int]): Boolean = mutableMap.get(list) match {
-    case Some(cachedResult) => cachedResult
-    case None => possibleMoves(list) match {
-      //no possible moves
-      case List() => false
-      // exists at least one move that is loosing for the next player
-      case moves if !moves.forall(isWinningPosition(_)) => true
-      // all moves for other player are winning, we loose whatever we choose now
-      case _ => false
-    }
-  }
-
-
-  /*  def cachingIsWinningPosition(list: List[Int]): Boolean = mutableMap.get(list) match {
-      case Some(result) => result
-      case None => {
-        val result = cachingIsWinningPosition(list)
-        mutableMap = mutableMap + (list -> result)
-        result
-      }
-    }*/
-}
-
-assert(!CachingSolution.isWinningPosition(List(1, 0, 0, 1)))
-assert(CachingSolution.isWinningPosition(List(1, 0, 1, 0, 1)))
-assert(!CachingSolution.isWinningPosition(List(0, 0, 0, 0, 0, 0)))
-*/
-
-
-//OK, but I guess that I also should make 'possibleMoves(list)' more efficient?
-//or replace some things into tail recursions?
-
-//OK, looks like I modified the possible moves to using patch and also distinct and it works better
-//Now it's time to wrap this beauty into the Solution class that would be able to read inputs from hackerrank
-
-//Well, my solution was terminated due to a timeout... what will speed it up though?
-//Well, i think i got to make 'possibleMoves' also cacheable, since it is also called a lot for same inputs.
-
-//Well, inially i forgot to update maps, but now I am still running out of allotted 7s
-//What could be improved? Maybe more effective reading?
-
-object Solution {
+object SolutionOverkill {
   var cachedGameStateEvaluations = Map[List[Int], Boolean]()
   var cachedPossibleMoves = Map[List[Int], List[List[Int]]]()
 
@@ -149,10 +58,114 @@ object Solution {
     }
   }
 }
-/*
-assert(!Solution.isWinningGameState(List(1, 0, 0, 1)))
-assert(Solution.isWinningGameState(List(1, 0, 1, 0, 1)))*/
-//assert(!
-  Solution.isWinningGameState(List(0,0,1, 0,1,1,1,1,0,1, 0, 1,1, 0, 0, 0))
-//)
 
+assert(!SolutionOverkill.isWinningGameState(List(1, 0, 0, 1)))
+assert(SolutionOverkill.isWinningGameState(List(1, 0, 1, 0, 1)))
+
+
+//New solution is based on 'why didn't i thought of that myself'
+// Step 1 - count long 1s, since they are bound to go away
+// All 11s are not going anywhere
+// Step 2 - count all 0s that are able to go away.
+
+def countAwailableMoves(gameState: List[Int]): Int = {
+  def isALoneInt(triple: List[Int], i:Int): Boolean = triple match {
+    case 0::x::0::Nil if x == i => true
+    case _ => false
+  }
+
+  val (loneOnes, trimmedGameStateTriplets) = gameState.sliding(3).partition(isALoneInt(_,1))
+
+  val loneOnesCount = loneOnes.length
+
+  val availableZeroesCount = trimmedGameStateTriplets.count(isALoneInt(_, 0))
+
+  loneOnesCount + availableZeroesCount
+}
+
+def isWinningPosition(gameState: List[Int]): Boolean = {
+  countAwailableMoves(gameState) % 2 == 1
+}
+
+assert(!isWinningPosition(List(1, 0, 0, 1)))
+ assert(isWinningPosition(List(1, 0, 1, 0, 1)))
+assert(!isWinningPosition(List(0, 0, 0, 0, 0, 0)))
+
+
+
+
+object Solution {
+  def main(args: Array[String]) {
+    val sc = new java.util.Scanner (System.in);
+    var q = sc.nextInt();
+    var a0 = 0;
+    while(a0 < q){
+      var n = sc.nextInt();
+      var a = new Array[Int](n);
+      for(a_i <- 0 to n-1) {
+        a(a_i) = sc.nextInt();
+      }
+      if (isWinningGameState(a.toList))
+        print("Alice\n")
+      else print("Bob\n")
+    }
+  }
+
+  def isWinningGameState(gameState: List[Int]): Boolean = {
+    countAwailableMoves(gameState) % 2 == 1
+  }
+
+  def countAwailableMoves(gameState: List[Int]): Int = {
+    def isALoneInt(triple: List[Int], i:Int): Boolean = triple match {
+      case 0::x::0::Nil if x == i => true
+      case _ => false
+    }
+
+    val (loneOnes, trimmedGameStateTriplets) = gameState.sliding(3).partition(isALoneInt(_,1))
+
+    val listOnes = loneOnes.toList
+    val listRest = trimmedGameStateTriplets.toList
+
+    val loneOnesCount = listOnes.length
+
+    val middle = listRest.map(_.tail.head)
+
+    assert (loneOnesCount + middle.length + 2 == gameState.length)
+
+    val trimmedGameState = gameState.head::middle ++ List(gameState.last)
+
+    val availableZeroesCount = trimmedGameState.sliding(3).count(isALoneInt(_, 0))
+
+    loneOnesCount + availableZeroesCount
+  }
+}
+
+Solution.isWinningGameState(List(0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0))
+Solution.isWinningGameState(List(0,0,1,0,1))
+Solution.isWinningGameState(List(0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,1,1,1,1,1,1,1,1,1,1,0,0,0))
+Solution.isWinningGameState(List(0,0,0,0,1,0,0,1,1,0,0,0,0,0,0,0,1,0,0,1,1,0,0,0))
+Solution.isWinningGameState(List(0,1,1,0,0,0,0,1,1,0,0,0))
+
+val gameState = List(0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0)
+
+def isALoneInt(triple: List[Int], i:Int): Boolean = triple match {
+  case 0::x::0::Nil if x == i => true
+  case _ => false
+}
+
+val (loneOnes, trimmedGameStateTriplets) = gameState.sliding(3).partition(isALoneInt(_,1))
+
+val listOnes = loneOnes.toList
+val listRest = trimmedGameStateTriplets.toList
+
+gameState.length
+
+val middle = listRest.map(_.tail.head)
+println(middle)
+
+assert (listOnes.length + middle.length + 2 == gameState.length)
+
+val trimmedGameState = gameState.head::middle ++ List(gameState.last)
+println(trimmedGameState)
+
+val availableZeroesCount = trimmedGameState.sliding(3).count(isALoneInt(_, 0))
