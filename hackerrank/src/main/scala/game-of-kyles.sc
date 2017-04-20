@@ -1,8 +1,8 @@
-object SolutionOverkill {
-  var cachedGameStateEvaluations2 = Map[List[Int], Boolean]()
-  var cachedPossibleMoves2 = Map[List[Int], List[List[Int]]]()
+object Solution {
+  val isDebugNew = false
+  val isDebugCached = false
   var cachedGameStateEvaluations = Map[List[Boolean], Boolean]()
-  var cachedPossibleMoves = Map[List[Boolean], List[List[Boolean]]]()
+  var cachedPossibleMoves = Map[List[Boolean], Set[List[Boolean]]]()
 
   def main(args: Array[String]) {
     val input = io.Source.stdin.getLines() drop 1
@@ -11,17 +11,25 @@ object SolutionOverkill {
       val line = inputPair.tail.head
 
       //is the ped standing.
-      val list = line.toList.map((c:Char) => if (c == 'X') false else true)
+      val list = stringToState(line)
 
       if (isWinningGameState(list))
         print("WIN\n")
-      else print("LOOSE\n")
+      else print("LOSE\n")
     })
+  }
+
+  def stringToState(line: String):List[Boolean] = line.toList.map((c:Char) => if (c == 'X') false else true)
+
+  def hasTerminalWinning(moves: Set[List[Boolean]]): Boolean = {
+    // terminal should be actually XXXX, or rather 'contains XXXX', right?
+    def isTerminalMove(move: List[Boolean]) = !move.exists(item => item)//!move.foldLeft(false)(_ || _) // after fold we have true if at least one true
+    moves.exists(isTerminalMove)
   }
 
   def isWinningGameState(gameState: List[Boolean]): Boolean = cachedGameStateEvaluations.get(gameState) match {
     case Some(cachedResult) => {
-      //      println("cached gamestate evaluation used for " + gameState.toString)
+      if (isDebugCached) println("cached gamestate evaluation used for " + gameState.toString)
       cachedResult
     }
     case None => {
@@ -35,78 +43,40 @@ object SolutionOverkill {
         case _ => false
       }
 
-      def hasTerminalWinning(moves: List[List[Boolean]]): Boolean = {
-        // terminal should be actually XXXX, or rather 'contains XXXX', right?
-        def isTerminalMove(move: List[Boolean]) = !move.foldLeft(false)(_ || _) // after fold we have true if at least one true
-        moves.exists(isTerminalMove)
-      }
-
       //don't forget to add to cache
       cachedGameStateEvaluations = cachedGameStateEvaluations + (gameState -> gameStateEvaluation)
-      //      println("update to cached gamestate evaluations; new is: " + gameState.toString)
+      if (isDebugNew) println("update to cached gamestate evaluations; new is: " + gameState.toString)
+      if (isDebugNew) println("state evaluation for " + gameState + "is : " + gameStateEvaluation)
       gameStateEvaluation
     }
   }
 
-  def possibleMoves(gameState: List[Boolean]): List[List[Boolean]] = cachedPossibleMoves.get(gameState) match {
+  def possibleMoves(gameState: List[Boolean]): Set[List[Boolean]] = cachedPossibleMoves.get(gameState) match {
     case Some(cachedMoves) => {
-      //      println("cached possible moves used for: " + list.toString)
+      if (isDebugCached) println("cached possible moves used for: " + gameState.mkString)
       cachedMoves
     }
     case None => {
       //calculate
-      val availableMoves:List[List[Boolean]] = ???
 
+      val singleMovesList = for {
+        place <- gameState.zipWithIndex if place._1
+      } yield gameState.patch(place._2, Seq(false), 1)
 
+      val doubleMovesList = for (
+        place <- gameState.sliding(2).zipWithIndex if (place._1.head & place._1.tail.head)
+      ) yield gameState.patch(place._2, Seq(false, false), 2)
+
+      val availableMoves: Set[List[Boolean]] = singleMovesList.toSet union doubleMovesList.toSet
       //don't forget to cache
       cachedPossibleMoves = cachedPossibleMoves + (gameState -> availableMoves)
-      //      println("updating cached possible moves; new is: " + list.toString)
-      availableMoves
-    }
-  }
-
-
-  def isWinningGameState2(gameState: List[Int]): Boolean = cachedGameStateEvaluations2.get(gameState) match {
-    case Some(cachedResult) => {
-      //      println("cached gamestate evaluation used for " + gameState.toString)
-      cachedResult
-    }
-    case None => {
-
-      val gameStateEvaluation = possibleMoves2(gameState) match {
-        //no possible moves
-        case List() => false
-        // exists at least one move that is loosing for the next player
-        case moves if moves.exists(!isWinningGameState2(_)) => true
-        // all moves for other player are winning, we loose whatever we choose now
-        case _ => false
-      }
-
-      cachedGameStateEvaluations2 = cachedGameStateEvaluations2 + (gameState -> gameStateEvaluation)
-      //      println("update to cached gamestate evaluations; new is: " + gameState.toString)
-      gameStateEvaluation
-    }
-  }
-
-  def possibleMoves2(list: List[Int]): List[List[Int]] = cachedPossibleMoves2.get(list) match {
-    case Some(cachedMoves) => {
-      //      println("cached possible moves used for: " + list.toString)
-      cachedMoves
-    }
-    case None => {
-      def checkIfValid(triple: List[Int]): Boolean = triple.head == 0 && triple.last == 0
-
-      val innerChecked = list.sliding(3).map(checkIfValid(_)).toList
-      val indexedChecks = innerChecked.zipWithIndex.filter(_._1)
-
-      val availableMoves = indexedChecks.map((pair: (Boolean, Int)) => list.patch(pair._2, Nil, 1)).distinct
-
-      cachedPossibleMoves2 = cachedPossibleMoves2 + (list -> availableMoves)
-      //      println("updating cached possible moves; new is: " + list.toString)
+      if (isDebugNew) println("updating cached possible moves; new is: " + availableMoves.mkString)
       availableMoves
     }
   }
 }
 
-assert(!SolutionOverkill.isWinningGameState2(List(1, 0, 0, 1)))
-assert(SolutionOverkill.isWinningGameState2(List(1, 0, 1, 0, 1)))
+//Solution.isWinningGameState(Solution.stringToState("IXXI"))
+//Solution.isWinningGameState(Solution.stringToState("XIIX"))
+//Solution.isWinningGameState(Solution.stringToState("IIXII"))
+Solution.isWinningGameState(Solution.stringToState("IIIII"))
