@@ -26,8 +26,20 @@ object SolutionOverkill {
     }
     case None => {
       //calculate value
-      val gameStateEvaluation: Boolean = ???
+      val gameStateEvaluation = possibleMoves(gameState) match {
+        //no possible moves
+        case moves if hasTerminalWinning(moves) => true
+        // exists at least one move that is loosing for the next player
+        case moves if moves.exists(!isWinningGameState(_)) => true
+        // all moves for other player are winning, we loose whatever we choose now
+        case _ => false
+      }
 
+      def hasTerminalWinning(moves: List[List[Boolean]]): Boolean = {
+        // terminal should be actually XXXX, or rather 'contains XXXX', right?
+        def isTerminalMove(move: List[Boolean]) = !move.foldLeft(false)(_ || _) // after fold we have true if at least one true
+        moves.exists(isTerminalMove)
+      }
 
       //don't forget to add to cache
       cachedGameStateEvaluations = cachedGameStateEvaluations + (gameState -> gameStateEvaluation)
