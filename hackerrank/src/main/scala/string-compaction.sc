@@ -1,3 +1,5 @@
+import scala.annotation.tailrec
+
 object Solution {
 
   def main(args: Array[String]) {
@@ -5,6 +7,8 @@ object Solution {
   }
 
   def compress(string: String):String = {
+
+    @tailrec
     def breakdown(string: String, acc: List[String]): List[String] = string match {
       case "" => acc.reverse
       case s => {
