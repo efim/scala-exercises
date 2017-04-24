@@ -1,0 +1,11 @@
+
+
+#2
+((λx.((λy.(x y))x))(λz.w)) => ((λx.(x x))(λz.w)) => (λz.w)(λz.w) => (λz.w)u => w
+
+#3
+((λx.(x x))(λx.(x x))) => CAN'T REDUCE
+
+#4
+(λg.((λf.((λx.(f (x x)))(λx.(f (x x))))) g)) => (λg.((λx.(g (x x)))(λx.(g (x x))))) =>
+CAN'T REDUCE
