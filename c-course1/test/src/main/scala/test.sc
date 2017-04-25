@@ -5,42 +5,32 @@ def f1(arr:List[Int]):List[Int] = {
     case some::Nil => acc
     case first::second::tail => filterOddPositionsAcc(tail, acc ::: List(second))
   }
-
   filterOddPositionsAcc(arr, List())
 }
-
 //filterEven positions
 def filterEven(arr:List[Int]):List[Int] =
   arr.zipWithIndex.filter(_._2 % 2 == 0).map(_._1)
-
 filterEven(List(1,2,3,4,5,6,7,8))
 filterEven(List(2,4,2,4,2,4))
 f1(List(1,2,3,4,5,6,7,8))
 f1(List(2,4,2,4,2,4))
-
 //make any array of requested size
 def f(num:Int) : Array[Int] = {
   val list = (1 to num).toArray
   return list
 }
-
 f(4)
-
 //reverse list
 def reverse(arr: List[Any]):List[Any] = {
   def reverseAcc(l: List[Any], acc: List[Any]):List[Any] = l match {
     case Nil => acc
     case head::tail => reverseAcc(tail, acc) ::: List(head)
   }
-
   reverseAcc(arr, List())
 }
-
 reverse(List(1,2,3,4,5))
-
 //get sum of odd elements
 def f5(arr:List[Int]):Int = arr.filter(_ % 2 != 0).sum
-
 f5(List(1,2,3,4,5,6,-1))
 
 //get len of list
