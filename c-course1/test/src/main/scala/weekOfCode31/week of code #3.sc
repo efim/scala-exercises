@@ -1,3 +1,5 @@
+// https://www.hackerrank.com/contests/w31/challenges/zero-one-game
+
 object SolutionOverkill {
   var cachedGameStateEvaluations = Map[List[Int], Boolean]()
   var cachedPossibleMoves = Map[List[Int], List[List[Int]]]()
