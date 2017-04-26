@@ -1,15 +1,24 @@
 //https://www.hackerrank.com/challenges/filter-elements
 
 object Solution {
-
   def main(args: Array[String]) {
     val lines = io.Source.stdin.getLines() drop(1)
+    lines.sliding(2, 2).foreach(inputPair => {
+      val delimiter = inputPair.head.split(" ").tail.head.toInt
+      val numbers = inputPair.tail
+        .head.split(" ").map(_.toInt).toList
+
+      val filtered = pluralElements(numbers, delimiter)
+      println(if (!filtered.isEmpty) filtered.mkString(" ") else "-1")
+    })
   }
+
+  def amounts(list: List[Int]) = list.groupBy(identity).mapValues(_.length)
+  def pluralElements(list: List[Int], n: Int) = amounts(list).filter(t => t._2 >= n ).keys
+
 }
 
 val list = List(1,2,1,5,1,1,2,15)
 
-def amounts(list: List[Int]) = list.groupBy(identity).mapValues(_.length)
-def pluralElements(list: List[Int], n: Int) = amounts(list).filter(t => t._2 >= n ).keys
 
-pluralElements(list, 3)
+Solution.pluralElements(list, 3)
