@@ -8,8 +8,14 @@ object Solution {
       val numbers = inputPair.tail
         .head.split(" ").map(_.toInt).toList
 
-      val filtered = pluralElements(numbers, delimiter)
-      println(if (!filtered.isEmpty) filtered.mkString(" ") else "-1")
+      val filtered = pluralElements(numbers, delimiter).toList
+
+      def sortedFiltered(items: List[Int], required: List[Int], seen: Set[Int], acc: List[Int]): List[Int] = items match {
+        case Nil => acc.reverse
+        case x::tail => sortedFiltered(tail, required, seen + x, if (required.contains(x) && !seen.contains(x)) x::acc else acc)
+      }
+
+      println(if (!filtered.isEmpty) sortedFiltered(numbers, filtered, Set(), List()).mkString(" ") else "-1")
     })
   }
 
