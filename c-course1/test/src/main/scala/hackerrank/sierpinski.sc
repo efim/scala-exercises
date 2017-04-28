@@ -36,9 +36,17 @@ class Sierpinski(level: Int, rowsNum: Int, colsNum: Int) {
     class Fraction(val multiplier: Int, val divisor: Int)
     lazy val fractions: Stream[Fraction] = {
       def fractionsN(n: Int):IndexedSeq[Fraction] = {
+        def isSimpleFraction(mul: Int, div: Int): Boolean = {
+          def gcd(a: Int,b: Int): Int = {
+            if(b ==0) a else gcd(b, a%b)
+          }
+
+          gcd(mul, div) == 1
+        }
+
         val div = math.pow(2,n).toInt
         for {
-          mul <- 1 to div - 1
+          mul <- 1 to div - 1 if isSimpleFraction(mul, div)
         } yield new Fraction(mul,div)
       }
 
@@ -70,5 +78,26 @@ class Sierpinski(level: Int, rowsNum: Int, colsNum: Int) {
   }
 }
 
+print(new Sierpinski(1))
+print(new Sierpinski(2))
 print(new Sierpinski(3))
+print(new Sierpinski(4))
+print(new Sierpinski(5))
+
+//So, ok. I had an error in main idea behind the algo.
+//I shouldn't just fold over whole top rows, but only some  small part of them.
+//Possibly just the adjaicent part.
+
+//object Solution {
+//  def drawTriangles(n: Int) {
+//    //Draw the N'th iteration of the fractal as described
+//    // in the problem statement
+//    print(new Sierpinski(n))
+//  }
+//
+//  def main(args: Array[String]) {
+//    drawTriangles(readInt())
+//  }
+//}
+
 
