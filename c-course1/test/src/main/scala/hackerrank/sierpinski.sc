@@ -65,9 +65,11 @@ class Sierpinski(level: Int, rowsNum: Int, colsNum: Int) {
     def mirrorLines(rows: List[Line], fraction: Fraction): List[Line] = {
       val lowerLinesAmount = rowsNum * fraction.multiplier / fraction.divisor
       val higherLinesAmount = rowsNum - lowerLinesAmount
+      val lineFraction = rowsNum / fraction.divisor
+      //can be done with sliding all at once, but would require bigger refactoring.
 
       val (topRows, lowerRows) = rows splitAt higherLinesAmount
-      val topRowsToApply: Stream[Option[Line]] = topRows.map(Some(_)).reverse.toStream append Stream.continually(None)
+      val topRowsToApply: Stream[Option[Line]] = topRows.reverse.take(lineFraction).map(Some(_)).toStream append Stream.continually(None)
 
       val lowerRowsUpdated = (lowerRows zip topRowsToApply).map(pair => pair._1.combine(pair._2))
 
@@ -78,26 +80,26 @@ class Sierpinski(level: Int, rowsNum: Int, colsNum: Int) {
   }
 }
 
-print(new Sierpinski(1))
+/*print(new Sierpinski(1))
 print(new Sierpinski(2))
 print(new Sierpinski(3))
 print(new Sierpinski(4))
-print(new Sierpinski(5))
+print(new Sierpinski(5))*/
 
 //So, ok. I had an error in main idea behind the algo.
 //I shouldn't just fold over whole top rows, but only some  small part of them.
 //Possibly just the adjaicent part.
 
-//object Solution {
-//  def drawTriangles(n: Int) {
-//    //Draw the N'th iteration of the fractal as described
-//    // in the problem statement
-//    print(new Sierpinski(n))
-//  }
-//
-//  def main(args: Array[String]) {
-//    drawTriangles(readInt())
-//  }
-//}
+object Solution {
+  def drawTriangles(n: Int) {
+    //Draw the N'th iteration of the fractal as described
+    // in the problem statement
+    print(new Sierpinski(n))
+  }
+
+  def main(args: Array[String]) {
+    drawTriangles(readInt())
+  }
+}
 
 
