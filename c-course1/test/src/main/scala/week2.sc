@@ -52,7 +52,9 @@ def expr = {
 
 expr
 
+lazy val N:Stream[Int] = Stream.cons(1, N.map(_+1))
 
+print(N.take(10).toList)
 
 
 
