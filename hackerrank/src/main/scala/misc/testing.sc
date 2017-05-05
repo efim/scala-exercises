@@ -1,12 +1,13 @@
 import misc.PrettyLines
 import misc.BlockingSim
-import misc.BlockingSim.{Request, ResourcePool, processRequest}
+//import misc.BlockingSim.{Request, ResourcePool, processRequest}
+import misc.BlockingSim.{Request, ResourcePool}
 
-
+/*
 //tests for pretty lines
 
 val line = "hell   o  . foso. yo."
-line.exists(char => !char.isLetter && char != '.')
+line.exists(char => !char.isLetter && char != '.' && char != ' ')
 
 val sentences = line.split('.').map(_.trim)
 val sentLists = sentences.map(_.split(" +"))
@@ -29,9 +30,9 @@ result.time
 val request2 = new Request(2, 3, 4, 2)
 val result2 = BlockingSim.processRequest(resources, request)
 result2.resources
-result2.time
-
+result2.time*/
 /*
+
 val requests = List(
   new Request(1, 1, 3, 5),
   new Request(2, 4, 6, 2),
@@ -64,12 +65,17 @@ def processRequest(resourcePool: ResourcePool, request: Request): ResourcePool =
 val initialResourses = new ResourcePool(List.fill(6)(0), 0)
 
 requests.foldLeft(initialResourses)(processRequest(_,_))
-*/
-/*
 def requestFromArray(input: Array[Int]): Request = new Request(input(0),input(1),input(2),input(3))
 
 val line = "1 1 3 5\n2 4 6 2\n3 4 6 2\n4 4 6 2\n5 1 5 1\n10 1 5 1"
 val RequestsFromText = line.split("\n").map(_.split(' '))
   .map(_.map(_.toInt))
   .map(requestFromArray).toList
+
+def f = {
+  RequestsFromText.foldLeft(initialResourses)(processRequest(_,_))
+  Unit
+}
+
+f
 */

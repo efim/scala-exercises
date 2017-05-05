@@ -10,7 +10,8 @@ object PrettyLines {
   }
 
   def prettify(record: String): String = {
-    if (record.isEmpty || !record.reverse.head.equals('.') || record.exists(char => !char.isLetter && char != '.')) {
+    def isAllowed(char: Char) = char.isLetter || char != '.' || char != ' '
+    if (record.filter(isAllowed).isEmpty || !record.reverse.head.equals('.') || record.exists(!isAllowed(_))) {
       "-1"
     }
     else {
