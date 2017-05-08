@@ -10,6 +10,7 @@ package streams
  * the shortest path between two positions without terrain
  * restrictions.
  */
+
 trait InfiniteTerrain extends GameDef {
   val terrain: Terrain = (pos: Pos) => true
 }

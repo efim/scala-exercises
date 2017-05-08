@@ -1,10 +1,8 @@
 package streams
 
 import org.scalatest.FunSuite
-
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-
 import Bloxorz._
 
 @RunWith(classOf[JUnitRunner])
@@ -28,6 +26,11 @@ class BloxorzSuite extends FunSuite {
     }
   }
 
+  trait InfiniteSolver extends GameDef with Solver with InfiniteTerrain {
+    override val goal: Pos = Pos(50, 50)
+    override val startPos: Pos = Pos(0, 0)
+  }
+
   trait Level1 extends SolutionChecker {
       /* terrain for level 1*/
 
@@ -40,6 +43,66 @@ class BloxorzSuite extends FunSuite {
       |------ooo-""".stripMargin
 
     val optsolution = List(Right, Right, Down, Right, Right, Right, Down)
+  }
+
+  test("getting neighbors infinite example test") {
+    new InfiniteSolver {
+      val someNeighbors = neighborsWithHistory(Block(Pos(1,1),Pos(1,1)), List(Left,Up)).toSet
+      val expectedResult = Set(
+        (Block(Pos(1,2),Pos(1,3)), List(Right,Left,Up)),
+        (Block(Pos(2,1),Pos(3,1)), List(Down,Left,Up)),
+        (Block(Pos(1,-1),Pos(1,0)), List(Left,Left,Up)),
+        (Block(Pos(-1,1),Pos(0,1)), List(Up,Left,Up))
+      )
+      assert(someNeighbors.equals(expectedResult))
+    }
+  }
+
+  test("new neigbors infinite example test") {
+    new InfiniteSolver {
+      val someNeighbors = newNeighborsOnly(
+        Set(
+          (Block(Pos(1, 2), Pos(1, 3)), List(Right, Left, Up)),
+          (Block(Pos(2, 1), Pos(3, 1)), List(Down, Left, Up))
+        ).toStream,
+
+        Set(Block(Pos(1, 2), Pos(1, 3)), Block(Pos(1, 1), Pos(1, 1)))
+      )
+      val expected = Set(
+        (Block(Pos(2, 1), Pos(3, 1)), List(Down, Left, Up))
+      ).toStream
+
+      assert(someNeighbors.equals(expected))
+    }
+  }
+
+  test("getting neighbors finite example test") {
+    new Level1 {
+      val someNeighbors = neighborsWithHistory(Block(Pos(1,1),Pos(1,1)), List(Left,Up)).toSet
+      val expectedResult = Set(
+        (Block(Pos(1,2),Pos(1,3)), List(Right,Left,Up)),
+        (Block(Pos(2,1),Pos(3,1)), List(Down,Left,Up))
+      )
+      assert(someNeighbors.equals(expectedResult))
+    }
+  }
+
+  test("new neigbors finite example test") {
+    new Level1 {
+      val someNeighbors = newNeighborsOnly(
+        Set(
+          (Block(Pos(1,2),Pos(1,3)), List(Right,Left,Up)),
+          (Block(Pos(2,1),Pos(3,1)), List(Down,Left,Up))
+        ).toStream,
+
+        Set(Block(Pos(1,2),Pos(1,3)), Block(Pos(1,1),Pos(1,1)))
+      )
+      val expected = Set(
+        (Block(Pos(2,1),Pos(3,1)), List(Down,Left,Up))
+      ).toStream
+
+      assert(someNeighbors.equals(expected))
+    }
   }
 
 
