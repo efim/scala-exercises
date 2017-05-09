@@ -2,6 +2,8 @@ package streams
 
 import common._
 
+import scala.annotation.tailrec
+
 /**
  * This component implements the solver for the Bloxorz game
  */
@@ -72,8 +74,12 @@ trait Solver extends GameDef {
   def from(initial: Stream[(Block, List[Move])],
            explored: Set[Block]): Stream[(Block, List[Move])] = {
 
-    val newExplored = initial.map(_._1).distinct.toSet
-    initial.append(from(newNeighborsOnly(initial, explored), explored.union(newExplored)))
+    val newExplored = explored.union(initial.map(_._1).distinct.toSet)
+
+    //first calculate neighbors of current block, then restrict with new neighbors only.
+    //wow that is some shit.
+    initial #::: from(newNeighborsOnly(initial.flatMap(
+      tuple => neighborsWithHistory(tuple._1, tuple._2)), explored), newExplored)
   }
 
   /**
@@ -85,7 +91,8 @@ trait Solver extends GameDef {
    * Returns a stream of all possible pairs of the goal block along
    * with the history how it was reached.
    */
-  lazy val pathsToGoal: Stream[(Block, List[Move])] = pathsFromStart.filter(e => done(e._1))
+  lazy val pathsToGoal: Stream[(Block, List[Move])] = pathsFromStart.
+    filter(e => done(e._1))
 
   /**
    * The (or one of the) shortest sequence(s) of moves to reach the
