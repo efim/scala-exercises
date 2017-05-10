@@ -78,8 +78,11 @@ trait Solver extends GameDef {
 
     //first calculate neighbors of current block, then restrict with new neighbors only.
     //wow that is some shit.
-    initial #::: from(newNeighborsOnly(initial.flatMap(
-      tuple => neighborsWithHistory(tuple._1, tuple._2)), explored), newExplored)
+    val newNeighbors = newNeighborsOnly(initial.flatMap(
+      tuple => neighborsWithHistory(tuple._1, tuple._2)), explored)
+
+    if (newNeighbors.nonEmpty) initial #::: from(newNeighbors, newExplored)
+    else initial #::: Stream.empty
   }
 
   /**
@@ -102,5 +105,6 @@ trait Solver extends GameDef {
    * the first move that the player should perform from the starting
    * position.
    */
-  lazy val solution: List[Move] = pathsToGoal.head._2.reverse
+  lazy val solution: List[Move] =
+    pathsToGoal.headOption.getOrElse((Block(Pos(0,0), Pos(0,0)), List.empty[Move]))._2.reverse
 }

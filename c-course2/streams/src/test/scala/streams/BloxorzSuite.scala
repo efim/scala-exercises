@@ -87,6 +87,8 @@ class BloxorzSuite extends FunSuite {
     }
   }
 
+  //Add more tests, why does Sovler::from ran same block twice??
+
   test("new neigbors finite example test") {
     new Level1 {
       val someNeighbors = newNeighborsOnly(
@@ -138,6 +140,26 @@ class BloxorzSuite extends FunSuite {
 	test("optimal solution length for level 1") {
     new Level1 {
       assert(solution.length == optsolution.length)
+    }
+  }
+
+  trait Level2 extends SolutionChecker {
+    /* terrain for level 1*/
+
+    val level =
+      """ooo-------
+        |oSoooo----
+        |ooooooooo-
+        |-ooooooooo
+        |-----ooooo
+        |----T-----""".stripMargin
+
+    val optsolution = List()
+  }
+
+  test("no possible solution length") {
+    new Level2 {
+      assert(solution.isEmpty)
     }
   }
 
