@@ -52,6 +52,22 @@ abstract class QuickCheckHeap extends Properties("Heap") with IntHeap {
     isEmpty(deleteMin(insert(0, QuickCheckHeap.this.empty)))
   }
 
+  //This one is the master properly, lol
+  //add property that for any list of ints inserts them and expects to get back in same odrer
+  property("extracting inserted list as ordered") = forAll { (list: List[Int]) => {
+      val heap = list.foldRight(QuickCheckHeap.this.empty)(insert)
+
+      checkWithSorted(list.sorted, heap)
+    }
+  }
+
+  def checkWithSorted(list: List[Int], heap: H):Boolean = list match {
+    case List() => true
+    case x::tail => {
+      x == findMin(heap) && checkWithSorted(tail, deleteMin(heap))
+    }
+  }
+
   property("correct deleteMin") = forAll { (heap: H) =>
     if (isEmpty(heap)) {
       Prop.throws(classOf[NoSuchElementException]) {
@@ -85,8 +101,5 @@ abstract class QuickCheckHeap extends Properties("Heap") with IntHeap {
       checkMins(heap, findMin(heap))
     }
   }
-
-
-
 
 }
