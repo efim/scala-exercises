@@ -1,16 +1,15 @@
 package calculator
 
 import org.scalatest.FunSuite
-
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-
 import org.scalatest._
-
 import TweetLength.MaxTweetLength
+import org.scalatest.prop.Checkers
+import org.scalacheck.Test._
 
 @RunWith(classOf[JUnitRunner])
-class CalculatorSuite extends FunSuite with ShouldMatchers {
+class CalculatorSuite extends FunSuite with ShouldMatchers with Checkers {
 
   /******************
    ** TWEET LENGTH **
@@ -50,5 +49,33 @@ class CalculatorSuite extends FunSuite with ShouldMatchers {
     val resultRed2 = TweetLength.colorForRemainingCharsCount(Var(-5))
     assert(resultRed2() == "red")
   }
+
+  test("number of solutions by delta") {
+
+    import calculator.Polynomial._
+
+    val (a,b,c) = (1.0,2.2,3.3)
+    val d = computeDelta(new Signal(a), new Signal(b), new Signal(c))
+
+    val solutions = computeSolutions(new Signal(a),new Signal(b),new Signal(c), d)()
+
+    val solutionsNumber = solutions.size
+
+    assert((d() < 0 && solutionsNumber == 0) ||
+      (d() == 0 && solutionsNumber == 1) ||
+      (d() > 0 && solutionsNumber == 2))
+  }
+
+  test("computes delta") {
+    import calculator.Polynomial._
+
+    val (a,b,c) = (1.3, 5.3, 6)
+    val computed = computeDelta(new Signal(a), new Signal(b), new Signal(c))()
+    computed - (scala.math.pow(b,2) + 4*a*c) < 0.001
+  }
+
+/*  test("running properties for some reason here") {
+    checkProperties(Parameters.default, new QuickCheckPolynomial {})
+  }*/
 
 }
