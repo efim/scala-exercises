@@ -4,7 +4,7 @@ object Polynomial {
   def computeDelta(a: Signal[Double], b: Signal[Double],
       c: Signal[Double]): Signal[Double] = {
     Signal {
-      math.pow(b(), 2) + 4*a()*c()
+      math.pow(b(), 2) - 4*a()*c()
     }
   }
 
@@ -18,7 +18,7 @@ object Polynomial {
         case _ if delta_ == 0 => Set(-b_ / 2*a_)
         case _ => {
           val deltaRoot = math.sqrt(delta_)
-          Set((-b_ + deltaRoot)/2*a_, (-b_ - deltaRoot)/2*a_)
+          Set((-b_ + deltaRoot)/(2*a_), (-b_ - deltaRoot)/(2*a_))
         }
       }
     }

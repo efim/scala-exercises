@@ -71,7 +71,21 @@ class CalculatorSuite extends FunSuite with ShouldMatchers with Checkers {
 
     val (a,b,c) = (1.3, 5.3, 6)
     val computed = computeDelta(new Signal(a), new Signal(b), new Signal(c))()
-    computed - (scala.math.pow(b,2) + 4*a*c) < 0.001
+    computed - (scala.math.pow(b,2) - 4*a*c) < 0.001
+  }
+
+  test("NaN on circular") {
+    import calculator.Calculator._
+
+    val results = computeValues(Map(
+      "a" -> Signal { Ref("a") },
+      "b" -> Signal { Literal(1)},
+      "c" -> Signal { Plus(Ref("b"), Ref("a")) }
+    ))
+
+    assert(results("a")().equals(Double.NaN))
+    assert(results("c")().equals(Double.NaN))
+
   }
 
 /*  test("running properties for some reason here") {
