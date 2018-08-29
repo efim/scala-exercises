@@ -25,3 +25,4 @@ val shownString = "Another Hello!".show
 // import cats.syntax.all._ - all of syntax
 // import cats.implicits._ - all of instances *and* syntax
 
+// stopped at p.41
