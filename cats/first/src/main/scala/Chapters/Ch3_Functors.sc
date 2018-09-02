@@ -121,3 +121,94 @@ Tree.branch(
 ).map(_.toUpperCase)
 
 // stopped at p.61
+
+/*
+  Contravariant functors - "contramap" - prepending operation
+ */
+trait Printable[A] {
+  self =>
+
+  def format(value: A): String
+  def contramap[B](f: B => A): Printable[B] =
+    new Printable[B] {
+      override def format(value: B): String =
+        self.format(f(value))
+    }
+}
+
+def format[A](value: A)(implicit p: Printable[A]): String= p.format(value)
+
+implicit val printableString: Printable[String] = new Printable[String] {
+  override def format(value: String) = "/" + value + "/"
+}
+
+implicit val printableInt: Printable[Int] = printableString.contramap((a: Int) => a.toString)
+format(112)
+
+implicit val printableBoolean: Printable[Boolean] = new Printable[Boolean] {
+  override def format(value: Boolean): String = if (value) "yes" else "no"
+}
+
+format("hello")
+format(true)
+
+case class Box[A](value: A)
+implicit def printableBox[A: Printable]: Printable[Box[A]] =
+  implicitly[Printable[A]].contramap(box => box.value)
+
+
+format(Box(1442))
+format(Box(true))
+format(Box("Hello boxed world"))
+
+/*
+  Invariant functors - need to provide function in both directions
+  both (A => B) and (B => A) in order to build F[B] from F[A]
+
+  why would that be the case, for example if F
+  is encoder\decoder and has type B both in invariant and contravariant
+  type bounds
+ */
+
+trait Codec[A] {
+  self =>
+
+  def encode(value: A): String
+  def decode(repr: String): A
+
+  def imap[B](dec: A => B, enc: B => A): Codec[B] = new Codec[B] {
+    override def encode(value: B): String = self.encode(enc(value))
+    override def decode(repr: String): B = dec(self.decode(repr))
+  }
+}
+
+def encode[A](value: A)(implicit c: Codec[A]): String = c.encode(value)
+def decode[A](repr: String)(implicit c: Codec[A]): A = c.decode(repr)
+
+implicit val stringCodex: Codec[String] = new Codec[String] {
+  override def encode(value: String): String = value
+  override def decode(repr: String): String = repr
+}
+
+implicit val intCodec: Codec[Int] = stringCodex.imap(_.toInt, _.toString)
+implicit val booleanCodec: Codec[Boolean] = stringCodex.imap(_.toBoolean, _.toString)
+
+// Decode doesn't account for failures, recommended reading is Monocle library on lenses
+
+encode("Hello!")
+decode[String]("Oh, hello!")
+
+encode(true)
+encode(441235)
+decode[Boolean]("false")
+decode[String]("11553")
+decode[Int]("11553")
+
+implicit def boxCodec[A](implicit c: Codec[A]): Codec[Box[A]] =
+  c.imap(Box(_), _.value)
+
+encode(Box("Boxed hello!!"))
+decode[Box[String]]("This is going to be decoded into BOX!! Whoooo!")
+decode[Box[Int]]("199941222")
+
+// continue on the page 68
