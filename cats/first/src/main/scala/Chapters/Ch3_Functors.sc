@@ -212,3 +212,40 @@ decode[Box[String]]("This is going to be decoded into BOX!! Whoooo!")
 decode[Box[Int]]("199941222")
 
 // continue on the page 68
+/*
+  In cats these are Contravariant[F[_]] and Invariant[F[_]]
+  for contravariant: Eq, Show, Function1 - logical =)
+ */
+
+import cats.Contravariant
+import cats.Show
+import cats.instances.string._
+
+val showString = Show[String]
+
+val showSymbol = Contravariant[Show].contramap(showString)((sym: Symbol) => s"'${sym.name}")
+
+showSymbol.show('dave)
+
+// using contravariant syntax..
+import cats.syntax.contravariant._
+
+showString.contramap[Symbol](sym => s"'${sym.name}").show('dave)
+
+/* Invariant instances in cats - for Monoid.
+for existing monoid creating a new one by providing functions into
+existing monoid to calculate operation result and using another function
+to get out of base monoid
+ */
+
+import cats.Monoid
+import cats.instances.string
+import cats.syntax.invariant._
+import cats.syntax.semigroup._
+
+implicit val symbolMonoid = Monoid[String].imap(Symbol.apply)(_.name)
+
+Monoid[Symbol].empty
+
+'a |+| 'few |+| 'words
+
