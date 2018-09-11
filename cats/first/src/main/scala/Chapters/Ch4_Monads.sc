@@ -57,3 +57,81 @@ myIdIntMonad.flatMap(idInt)( int => int.toDouble: Id[Double])
   * and giving ability to immediately specifying other type
   * stopped at page 93
   */
+
+/// Either cats syntax useful things:
+import java.security.KeyStore.PasswordProtection
+
+import cats.syntax.either._
+
+sealed trait LoginError extends Serializable
+final case class UserNotFound(username: String) extends LoginError
+final case class PasswordIncorrect(username: String) extends LoginError
+case object UnexpectedError extends LoginError
+
+case class User(username: String, password: String)
+
+type LoginResult = Either[LoginError, User]
+
+def handleError(error: LoginError): Unit =
+    error match {
+        case UserNotFound(u) =>
+            println(s"User not found: $u")
+        case PasswordIncorrect(u) =>
+            println(s"Password incorrect: $u")
+        case UnexpectedError =>
+            println(s"Unexpected error")
+    }
+
+val result1 = User("nn", "123").asRight
+val result2 = UserNotFound("nnn").asLeft
+
+result1.fold(handleError, println)
+result2.fold(handleError, println)
+
+// also new are
+result2.recover {case error: LoginError => User("default", "") }
+PasswordIncorrect("lanam").asLeft.leftMap(value => f"lolo: $value")
+
+result1.bimap((left: LoginError) => "mapped! " + left.toString(), (right: User) => right.username)
+
+result2.bimap((left: LoginError) => "mapped! " + left.toString(), (right: User) => right.username)
+
+/// The Eval monad ... abstraction over methods of evaluation
+// {eager, lazy} X {memoized, not memoized}.
+
+// cats has Now, Later, Always
+import cats.Eval
+
+val now = Eval.now({println("hi NOW!"); math.random + 1000}) // eager, memoized
+val later = Eval.later({println("hi LATER!"); math.random + 2000}) // lazy, memoized
+val always = Eval.always({println("hi ALWAYS!"); math.random + 3000}) // lazy,
+
+now.value
+now.value
+
+later.value
+later.value
+
+always.value
+always.value
+
+// map and flatMap on Eval...
+val greeting = Eval.
+    always { println("Step 1"); "Hello"}.
+    map { str => println("Step 2"); s"$str world"}
+
+greeting.value
+
+val ans = for {
+    a <- Eval.now {println("Calculating A"); 40 }
+    b <- Eval.always {println("Calculating B"); 2 }
+} yield {
+    println("Adding A and B")
+    a + b
+}
+
+ans.value
+
+ans.value
+
+// stopped at p.106
