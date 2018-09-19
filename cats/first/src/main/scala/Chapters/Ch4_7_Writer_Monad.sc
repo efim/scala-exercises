@@ -129,7 +129,7 @@ def checkLogin(
     username <- findUsername(userId)
     check <- username
       .map(name => checkPassword(name, password))
-      .getOrElse(Reader((db: Db) => false))
+      .getOrElse(false.pure[DbReader])
   } yield check
 
 /**
@@ -165,6 +165,8 @@ checkLogin(1, "zerocool").run(db)
 
 checkLogin(4, "davinci").run(db)
 // stopped at page 118
+
+
 
 
 
