@@ -5,6 +5,7 @@
   */
 
 import cats.data.State
+
 val a = State[Int, String] { state =>
   (state, s"The state is $state")
 }
@@ -55,7 +56,7 @@ setDemo.run(10).value
 val pureDemo = State.pure[Int, String]("Result")
 pureDemo.run(10).value
 
-val inspectDemo = State.inspect[Int, String] (_ + "!")
+val inspectDemo = State.inspect[Int, String](_ + "!")
 inspectDemo.run(10).value
 
 val modifyDemo = State.modify[Int](_ + 1)
@@ -78,19 +79,91 @@ val (programState, programResult) = program.run(1).value
 type CalcState[A] = State[List[Int], A]
 
 def evalOne(sym: String): CalcState[Int] = State[List[Int], Int] { oldStack =>
-  def someTransformation(stack: List[Int]): List[Int] = ???
-  def someCalculation: Int = ???
+  val symbol = sym.charAt(0).charValue() // charAt is not good at all
+  val operations = Map(
+    '+' -> { a: Int => b: Int => a + b },
+    '*' -> { a: Int => b: Int => a * b }
+  )
 
-  val newStack = someTransformation(oldStack)
-  val result = someCalculation
-
-  (newStack, result)
+  if (symbol.isDigit) {
+    val digit = symbol.toInt
+    (digit :: oldStack, digit)
+  } else if (operations.contains(symbol)) {
+    oldStack match {
+      case x :: y :: restStack => (restStack, operations(symbol)(x)(y))
+      case _ => throw new IllegalStateException("Not enough operands on stack")
+    }
+  } else {
+    throw new IllegalArgumentException("Unrecognized symbol")
+  }
 }
 
+def evalDigit(sym: String): CalcState[Int] = {
+  val d = sym.toInt
+  for {
+    _ <- modify[List[Int]](d :: _)
+  } yield d
+}
+/*
+
+def evalOperation(sym: String): CalcState[Int] = {
+  val operations = Map(
+    '+' -> { a: Int => b: Int => a + b },
+    '*' -> { a: Int => b: Int => a * b }
+  )
+
+  for {
+    oldStack <- get[List[Int]]
+    a = oldStack.head
+    b = oldStack.tail.head
+    _ <- modify[List[Int]](_.tail.tail)
+  } yield operations(sym.charAt(0))(a)(b)
+}
+
+def evalOneFromPrimitives(sym: String): CalcState[Int] =
+  for {
+    result <- evalDigit(sym) if sym.charAt(0).isDigit
+    result <- evalOperation(sym) if !sym.charAt(0).isDigit
+  } yield result
+*/
 
 
+// both solutions are not quite there. here's with idea from the book
+// but using primitives
 
+def operator(function: (Int, Int) => Int): CalcState[Int] =
+  for {
+    oldStack <- get[List[Int]]
+    (a, b, restStack) = oldStack match {
+      case a :: b :: restStack => (a, b, restStack)
+      case _ => throw new IllegalStateException("Not enough arguments on stack")
+    }
+    _ <- set[List[Int]](restStack)
+  } yield function(a, b)
 
+def anotherOperator(function: (Int, Int) => Int): CalcState[Int] =
+  State[List[Int], Int] { state =>
+    state match {
+      case a :: b :: tail => (tail, function(a, b))
+      case _ => throw new IllegalStateException("Not enough arguments on stack")
+    }
+  }
 
+def operand(i: Int): CalcState[Int] =
+  for {
+    _ <- modify[List[Int]](i :: _)
+  } yield i
 
+def evalOneBookVersion(sym: String): CalcState[Int] =
+  sym match {
+    case "+" => operator(_ + _)
+    case "-" => operator(_ - _)
+    case "*" => operator(_ * _)
+    case "/" => operator(_ / _)
+    case num => operand(num.toInt)
+  }
+
+evalOne("42").run(Nil).value
+//evalOneFromPrimitives("42").runA(Nil).value
+evalOneBookVersion("42").run(Nil).value
 
