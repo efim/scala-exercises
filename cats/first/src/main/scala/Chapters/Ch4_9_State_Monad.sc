@@ -138,13 +138,17 @@ def operator(function: (Int, Int) => Int): CalcState[Int] =
       case a :: b :: restStack => (a, b, restStack)
       case _ => throw new IllegalStateException("Not enough arguments on stack")
     }
-    _ <- set[List[Int]](restStack)
-  } yield function(a, b)
+    result = function(a,b)
+    _ <- set[List[Int]](result::restStack)
+  } yield result
 
 def anotherOperator(function: (Int, Int) => Int): CalcState[Int] =
   State[List[Int], Int] { state =>
     state match {
-      case a :: b :: tail => (tail, function(a, b))
+      case a :: b :: tail => {
+        val result = function(a, b)
+        (result::tail, function(a, b))
+      }
       case _ => throw new IllegalStateException("Not enough arguments on stack")
     }
   }
@@ -165,5 +169,48 @@ def evalOneBookVersion(sym: String): CalcState[Int] =
 
 evalOne("42").run(Nil).value
 //evalOneFromPrimitives("42").runA(Nil).value
+println("test evalOne book version updated")
 evalOneBookVersion("42").run(Nil).value
+evalOneBookVersion("+").run(List(1,2)).value
+
+"4".charAt(0).charValue().toInt
+// hoho
+
+val calcProgram = evalOneBookVersion("1").flatMap { case _ => evalOneBookVersion("2").flatMap { case _ => evalOneBookVersion("+").map(ans => ans)
+}
+}
+
+
+calcProgram.runA(Nil).value
+
+import cats.syntax.applicative._
+import cats.instances.int._
+
+def evalAll(input: List[String]): CalcState[Int] = {
+  input.foldRight(0.pure[CalcState])(
+    (str, state) => state.flatMap(
+      { case _ => evalOneBookVersion(str) }
+    ))
+}
+
+
+val longProgram = evalAll(List("1", "2", "+", "3", "*"))
+
+//longProgram.runA(Nil).value
+
+def evalAllBookVersion(input: List[String]): CalcState[Int] =
+  input.foldLeft(0.pure[CalcState]) { (state, str) =>
+    state.flatMap(_ => evalOneBookVersion(str))
+  }
+
+val longProgram2 = evalAllBookVersion(List("1", "2", "+", "3", "*"))
+
+longProgram2.runA(Nil).value
+
+
+
+
+
+
+
 
